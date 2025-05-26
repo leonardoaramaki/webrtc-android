@@ -16,6 +16,8 @@ import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
+
+import java.nio.ByteBuffer;
 import java.util.concurrent.ScheduledExecutorService;
 import org.webrtc.JniCommon;
 import org.webrtc.Logging;
@@ -445,6 +447,14 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
   public void setPreferredInputDevice(AudioDeviceInfo preferredInputDevice) {
     Logging.d(TAG, "setPreferredInputDevice: " + preferredInputDevice);
     audioInput.setPreferredDevice(preferredInputDevice);
+  }
+
+  public void notifyDataIsRecorded(int bytes) {
+    audioInput.notifyDataIsRecorded(bytes);
+  }
+
+  public ByteBuffer getByteBuffer() {
+    return audioInput.getByteBuffer();
   }
 
   private static native long nativeCreateAudioDeviceModule(Context context,

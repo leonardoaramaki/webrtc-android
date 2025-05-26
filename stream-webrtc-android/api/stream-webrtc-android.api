@@ -2295,6 +2295,10 @@ public class org/webrtc/audio/LegacyAudioDeviceModule : org/webrtc/audio/AudioDe
 	public fun setSpeakerMute (Z)V
 }
 
+public abstract interface class org/webrtc/voiceengine/AudioRecordFactory {
+	public abstract fun create (IIIII)Landroid/media/AudioRecord;
+}
+
 public final class org/webrtc/voiceengine/BuildInfo {
 	public fun <init> ()V
 	public static fun getAndroidBuildId ()Ljava/lang/String;
@@ -2332,6 +2336,7 @@ public class org/webrtc/voiceengine/WebRtcAudioManager {
 }
 
 public class org/webrtc/voiceengine/WebRtcAudioRecord {
+	public static fun setAudioRecordFactory (Lorg/webrtc/voiceengine/AudioRecordFactory;)V
 	public static fun setAudioSource (I)V
 	public static fun setErrorCallback (Lorg/webrtc/voiceengine/WebRtcAudioRecord$WebRtcAudioRecordErrorCallback;)V
 	public static fun setMicrophoneMute (Z)V

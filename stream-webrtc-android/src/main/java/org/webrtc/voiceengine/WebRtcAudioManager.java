@@ -48,6 +48,8 @@ public class WebRtcAudioManager {
   private static boolean blacklistDeviceForOpenSLESUsage;
   private static boolean blacklistDeviceForOpenSLESUsageIsOverridden;
 
+  private static @Nullable AudioRecordFactory externalAudioRecordFactory;
+
   // Call this method to override the default list of blacklisted devices
   // specified in WebRtcAudioUtils.BLACKLISTED_OPEN_SL_ES_MODELS.
   // Allows an app to take control over which devices to exclude from using
@@ -57,6 +59,18 @@ public class WebRtcAudioManager {
   public static synchronized void setBlacklistDeviceForOpenSLESUsage(boolean enable) {
     blacklistDeviceForOpenSLESUsageIsOverridden = true;
     blacklistDeviceForOpenSLESUsage = enable;
+  }
+
+  public static synchronized void setExternalAudioRecordFactory(@Nullable AudioRecordFactory factory) {
+    externalAudioRecordFactory = factory;
+  }
+
+  public static synchronized @Nullable AudioRecordFactory getExternalAudioRecordFactory() {
+    return externalAudioRecordFactory;
+  }
+
+  public static synchronized void notifyAudioRecorded() {
+
   }
 
   // Call these methods to override the default mono audio modes for the specified direction(s)

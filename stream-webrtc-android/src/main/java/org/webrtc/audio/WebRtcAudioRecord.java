@@ -21,9 +21,19 @@ import android.media.AudioTimestamp;
 import android.media.MediaRecorder.AudioSource;
 import android.os.Build;
 import android.os.Process;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import java.lang.System;
+
+import org.webrtc.CalledByNative;
+import org.webrtc.Logging;
+import org.webrtc.ThreadUtils;
+import org.webrtc.audio.JavaAudioDeviceModule.AudioRecordErrorCallback;
+import org.webrtc.audio.JavaAudioDeviceModule.AudioRecordStartErrorCode;
+import org.webrtc.audio.JavaAudioDeviceModule.AudioRecordStateCallback;
+import org.webrtc.audio.JavaAudioDeviceModule.SamplesReadyCallback;
+import org.webrtc.voiceengine.WebRtcAudioManager;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -36,13 +46,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import org.webrtc.CalledByNative;
-import org.webrtc.Logging;
-import org.webrtc.ThreadUtils;
-import org.webrtc.audio.JavaAudioDeviceModule.AudioRecordErrorCallback;
-import org.webrtc.audio.JavaAudioDeviceModule.AudioRecordStartErrorCode;
-import org.webrtc.audio.JavaAudioDeviceModule.AudioRecordStateCallback;
-import org.webrtc.audio.JavaAudioDeviceModule.SamplesReadyCallback;
 
 class WebRtcAudioRecord {
   private static final String TAG = "WebRtcAudioRecordExternal";
@@ -313,9 +316,15 @@ class WebRtcAudioRecord {
     try {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         // Use the AudioRecord.Builder class on Android M (23) and above.
-        // Throws IllegalArgumentException.
-        audioRecord = createAudioRecordOnMOrHigher(
-          audioSource, sampleRate, channelConfig, audioFormat, bufferSizeInBytes);
+        // Throws IllegalArgumentException.;
+        if (WebRtcAudioManager.getExternalAudioRecordFactory() == null) {
+          audioRecord = createAudioRecordOnMOrHigher(
+            audioSource, sampleRate, channelConfig, audioFormat, bufferSizeInBytes);
+        } else {
+          audioRecord = WebRtcAudioManager.getExternalAudioRecordFactory().create(
+            audioSource, sampleRate, channelConfig, audioFormat, bufferSizeInBytes
+          );
+        }
         audioSourceMatchesRecordingSessionRef.set(null);
         if (preferredDevice != null) {
           setPreferredDevice(preferredDevice);
@@ -503,6 +512,18 @@ class WebRtcAudioRecord {
     long nativeAudioRecordJni, ByteBuffer byteBuffer);
   private native void nativeDataIsRecorded(
     long nativeAudioRecordJni, int bytes, long captureTimestampNs);
+
+  public void notifyDataIsRecorded(int bytes) {
+    long captureTimeNs = 0;
+    if (nativeAudioRecord != 0) {
+      nativeDataIsRecorded(nativeAudioRecord, bytes, captureTimeNs);
+    }
+  }
+
+  @Nullable
+  public ByteBuffer getByteBuffer() {
+    return byteBuffer;
+  }
 
   // Sets all recorded samples to zero if `mute` is true, i.e., ensures that
   // the microphone is muted.
